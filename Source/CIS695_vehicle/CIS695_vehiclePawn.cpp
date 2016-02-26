@@ -404,7 +404,7 @@ void ACIS695_vehiclePawn::tryTCPSocket()
 	if (SocketAsClient->GetConnectionState()!=ESocketConnectionState::SCS_Connected)
 	{
 		FString address = TEXT("192.168.1.81");
-		int32 port = 2018;
+		int32 port = 3491;
 		FIPv4Address ip;
 		FIPv4Address::Parse(address, ip);
 
