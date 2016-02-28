@@ -10,6 +10,7 @@ class UCameraComponent;
 class USpringArmComponent;
 class UTextRenderComponent;
 class UInputComponent;
+class ATCPClientActor;
 
 UCLASS(config = Game)
 class ACIS695_vehiclePawn : public AWheeledVehicle
@@ -17,7 +18,7 @@ class ACIS695_vehiclePawn : public AWheeledVehicle
 	GENERATED_BODY()
 
 		/** Spring arm that will offset the camera */
-		UPROPERTY(Category = Camera, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(Category = Camera, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		USpringArmComponent* SpringArm;
 
 	/** Camera component that will be our viewpoint */
@@ -39,7 +40,7 @@ class ACIS695_vehiclePawn : public AWheeledVehicle
 	/** Audio component for the engine sound */
 	UPROPERTY(Category = Display, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		UAudioComponent* EngineSoundComponent;
-
+	
 public:
 	ACIS695_vehiclePawn();
 
@@ -66,6 +67,8 @@ public:
 	/** Are we in reverse gear */
 	UPROPERTY(Category = Camera, VisibleDefaultsOnly, BlueprintReadOnly)
 		bool bInReverseGear;
+	
+	ATCPClientActor* TCPClient;
 
 	/** Initial offset of invehicle camera */
 	FVector InternalCameraOrigin;
@@ -96,22 +99,16 @@ public:
 	void OnHandbrakeReleased();
 	/** Switch between cameras */
 	void OnToggleCamera();
-	/** Handle reset VR device */
-	void OnResetVR();
 	/** Handle exit event */
 	void OnExit();
+	/** Handle Msg event */
+	void OnMsg();
+
 
 	static const FName LookUpBinding;
 	static const FName LookRightBinding;
 	static const FName EngineAudioRPM;
 	///////////////////////////////////////
-
-	FSocket* SocketAsClient;
-
-	void tryTCPSocket(); //Thread this eventually
-
-	//Rama's StringFromBinaryArray
-	FString StringFromBinaryArray(const TArray<uint8>& BinaryArray);
 
 	void VShow(const FString str);
 

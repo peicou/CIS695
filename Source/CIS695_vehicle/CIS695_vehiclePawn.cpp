@@ -5,6 +5,7 @@
 #include "CIS695_vehicleWheelFront.h"
 #include "CIS695_vehicleWheelRear.h"
 #include "CIS695_vehicleHud.h"
+#include "TCPClientActor.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
@@ -16,7 +17,7 @@
 #include "Engine/SkeletalMesh.h"
 #include "Engine.h"
 #include <string>
-//#include "Runtime/Sockets/Public/Sockets.h"
+
 
 
 #ifdef HMD_INTGERATION
@@ -169,8 +170,6 @@ ACIS695_vehiclePawn::ACIS695_vehiclePawn()
 	bIsLowFriction = false;
 	bInReverseGear = false;
 
-	SocketAsClient = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->CreateSocket(NAME_Stream, TEXT("default"), false);
-
 }
 
 void ACIS695_vehiclePawn::SetupPlayerInputComponent(class UInputComponent* InputComponent)
@@ -187,8 +186,9 @@ void ACIS695_vehiclePawn::SetupPlayerInputComponent(class UInputComponent* Input
 	InputComponent->BindAction("Handbrake", IE_Released, this, &ACIS695_vehiclePawn::OnHandbrakeReleased);
 	InputComponent->BindAction("SwitchCamera", IE_Pressed, this, &ACIS695_vehiclePawn::OnToggleCamera);
 
-	InputComponent->BindAction("ResetVR", IE_Pressed, this, &ACIS695_vehiclePawn::OnResetVR);
 	InputComponent->BindAction("Exit", IE_Pressed, this, &ACIS695_vehiclePawn::OnExit);
+
+	InputComponent->BindAction("Msg", IE_Pressed, this, &ACIS695_vehiclePawn::OnMsg);
 }
 
 void ACIS695_vehiclePawn::MoveForward(float Val)
@@ -225,7 +225,6 @@ void ACIS695_vehiclePawn::EnableInvehicleView(const bool bState)
 
 		if (bState == true)
 		{
-			OnResetVR();
 			Camera->Deactivate();
 			InternalCamera->Activate();
 		}
@@ -285,62 +284,31 @@ void ACIS695_vehiclePawn::Tick(float Delta)
 
 void ACIS695_vehiclePawn::BeginPlay()
 {
-	FTimerHandle TH;
 	bool bWantInvehicle = false;
 	// First disable both speed/gear displays
 	bInvehicleCameraActive = false;
 	InvehicleSpeed->SetVisibility(bInvehicleCameraActive);
 	InvehicleGear->SetVisibility(bInvehicleCameraActive);
 
-#ifdef HMD_INTGERATION
-	// Enable in vehicle view if HMD is attached
-	bWantInvehicle = GEngine->HMDDevice.IsValid()
-#endif // HMD_INTGERATION
-
-		EnableInvehicleView(bWantInvehicle);
+	EnableInvehicleView(bWantInvehicle);
 	// Start an engine sound playing
 	EngineSoundComponent->Play();
 
-	//connect to server
-	GetWorldTimerManager().SetTimer(TH, this, &ACIS695_vehiclePawn::tryTCPSocket, 3, true);
+	//spawn the TCPClient, try and connect
+	TCPClient = GetWorld()->SpawnActor<ATCPClientActor>(ATCPClientActor::StaticClass());
+	TCPClient->tryTCPSocket();
 	
-}
-
-void ACIS695_vehiclePawn::OnResetVR()
-{
-#ifdef HMD_INTGERATION
-	if (GEngine->HMDDevice.IsValid())
-	{
-		GEngine->HMDDevice->ResetOrientationAndPosition();
-		InternalCamera->SetRelativeLocation(InternalCameraOrigin);
-		GetController()->SetControlRotation(FRotator());
-	}
-#else
-	if (SocketAsClient->GetConnectionState() == ESocketConnectionState::SCS_Connected)
-	{
-		FString serialized = TEXT("Hello from UE4|dickbutt");
-		TCHAR *serializedChar = serialized.GetCharArray().GetData();
-		int32 size = FCString::Strlen(serializedChar);
-		int32 sent = 0;
-		bool successful = SocketAsClient->Send((uint8*)TCHAR_TO_UTF8(serializedChar), size, sent);
-		if (successful) {
-			VShow("message sent");
-		}
-		else {
-			VShow("message not sent");
-		}
-	} else 
-	{
-		VShow("No connection");
-	}
-	
-#endif // HMD_INTGERATION
 }
 
 void ACIS695_vehiclePawn::OnExit()
 {
-	SocketAsClient->Close();
+	TCPClient->endConnection();
 	GetWorld()->GetFirstPlayerController()->ConsoleCommand("quit");
+}
+
+void ACIS695_vehiclePawn::OnMsg()
+{
+	TCPClient->sendMsg("Mensaje\n\n");
 }
 
 void ACIS695_vehiclePawn::UpdateHUDStrings()
@@ -397,36 +365,6 @@ void ACIS695_vehiclePawn::UpdatePhysicsMaterial()
 			bIsLowFriction = true;
 		}
 	}
-}
-
-void ACIS695_vehiclePawn::tryTCPSocket()
-{
-	if (SocketAsClient->GetConnectionState()!=ESocketConnectionState::SCS_Connected)
-	{
-		FString address = TEXT("192.168.1.81");
-		int32 port = 3491;
-		FIPv4Address ip;
-		FIPv4Address::Parse(address, ip);
-
-
-		TSharedPtr<FInternetAddr, ESPMode::NotThreadSafe> addr = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->CreateInternetAddr();
-		addr->SetIp(ip.GetValue());
-		addr->SetPort(port);
-
-		if (SocketAsClient->Connect(*addr))
-		{
-			VShow("Connected to remote server");
-		}
-	}
-
-}
-
-//Rama's String From Binary Array
-FString ACIS695_vehiclePawn::StringFromBinaryArray(const TArray<uint8>& BinaryArray)
-{
-	//Create a string from a byte array!
-	std::string cstr(reinterpret_cast<const char*>(BinaryArray.GetData()), BinaryArray.Num());
-	return FString(cstr.c_str());
 }
 
 void ACIS695_vehiclePawn::VShow(const FString str)
