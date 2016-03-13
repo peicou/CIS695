@@ -5,7 +5,7 @@
 #include "CIS695_vehicleWheelFront.h"
 #include "CIS695_vehicleWheelRear.h"
 #include "CIS695_vehicleHud.h"
-#include "TCPClientActor.h"
+#include "TCPComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
@@ -163,6 +163,9 @@ ACIS695_vehiclePawn::ACIS695_vehiclePawn()
 	EngineSoundComponent->SetSound(SoundCue.Object);
 	EngineSoundComponent->AttachTo(GetMesh());
 
+	//FCSZ Setup the TCPNetComponent
+	TCPNetComponent = CreateDefaultSubobject<UTCPComponent>(TEXT("TCPNet"));
+
 	// Colors for the in-vehicle gear display. One for normal one for reverse
 	GearDisplayReverseColor = FColor(255, 0, 0, 255);
 	GearDisplayColor = FColor(255, 255, 255, 255);
@@ -294,21 +297,21 @@ void ACIS695_vehiclePawn::BeginPlay()
 	// Start an engine sound playing
 	EngineSoundComponent->Play();
 
-	//spawn the TCPClient, try and connect
-	TCPClient = GetWorld()->SpawnActor<ATCPClientActor>(ATCPClientActor::StaticClass());
-	TCPClient->tryTCPSocket();
-	
+	//FCSZ TCPClient: try and connect
+	TCPNetComponent->tryTCPSocket();	
 }
 
 void ACIS695_vehiclePawn::OnExit()
 {
-	TCPClient->endConnection();
+	//FCSZ TCPClient end connection
+	TCPNetComponent->endConnection();
 	GetWorld()->GetFirstPlayerController()->ConsoleCommand("quit");
 }
 
 void ACIS695_vehiclePawn::OnMsg()
 {
-	TCPClient->sendMsg("Mensaje\n\n");
+	//FCSZ TCPClient->sendMsg("120");
+	TCPNetComponent->sendMsg("120");
 }
 
 void ACIS695_vehiclePawn::UpdateHUDStrings()

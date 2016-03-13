@@ -1,7 +1,6 @@
 // Copyright 1998-2015 Epic Games, Inc. All Rights Reserved.
 #pragma once
 #include "GameFramework/Wheeledvehicle.h"
-#include "Runtime/Networking/Public/Networking.h"
 #include "CIS695_vehiclePawn.generated.h"
 
 
@@ -10,7 +9,7 @@ class UCameraComponent;
 class USpringArmComponent;
 class UTextRenderComponent;
 class UInputComponent;
-class ATCPClientActor;
+class UTCPComponent;
 
 UCLASS(config = Game)
 class ACIS695_vehiclePawn : public AWheeledVehicle
@@ -40,6 +39,10 @@ class ACIS695_vehiclePawn : public AWheeledVehicle
 	/** Audio component for the engine sound */
 	UPROPERTY(Category = Display, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		UAudioComponent* EngineSoundComponent;
+
+	/** FCSZ Adding TCPComponent for remote connectivity */
+	UPROPERTY(Category = Network, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		UTCPComponent* TCPNetComponent;
 	
 public:
 	ACIS695_vehiclePawn();
@@ -67,8 +70,6 @@ public:
 	/** Are we in reverse gear */
 	UPROPERTY(Category = Camera, VisibleDefaultsOnly, BlueprintReadOnly)
 		bool bInReverseGear;
-	
-	ATCPClientActor* TCPClient;
 
 	/** Initial offset of invehicle camera */
 	FVector InternalCameraOrigin;
@@ -145,4 +146,6 @@ public:
 	FORCEINLINE UTextRenderComponent* GetInvehicleGear() const { return InvehicleGear; }
 	/** Returns EngineSoundComponent subobject **/
 	FORCEINLINE UAudioComponent* GetEngineSoundComponent() const { return EngineSoundComponent; }
+	/** FCSZ Returns TCPComponent subobject **/
+	FORCEINLINE UTCPComponent* GetTCPComponent() const { return TCPNetComponent; }
 };
