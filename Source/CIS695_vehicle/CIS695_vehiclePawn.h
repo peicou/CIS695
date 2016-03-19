@@ -124,7 +124,7 @@ private:
 	void EnableInvehicleView(const bool bState);
 
 	/** Update the gear and speed strings */
-	void UpdateHUDStrings();
+	void UpdateHUDStrings(float dt);
 
 	/* Are we on a 'slippery' surface */
 	bool bIsLowFriction;
@@ -132,6 +132,8 @@ private:
 	UPhysicalMaterial* SlipperyMaterial;
 	/** Non Slippery Material instance */
 	UPhysicalMaterial* NonSlipperyMaterial;
+
+	float dTime;
 
 public:
 	/** Returns SpringArm subobject **/

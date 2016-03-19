@@ -173,6 +173,8 @@ ACIS695_vehiclePawn::ACIS695_vehiclePawn()
 	bIsLowFriction = false;
 	bInReverseGear = false;
 
+	dTime = 0;
+
 }
 
 void ACIS695_vehiclePawn::SetupPlayerInputComponent(class UInputComponent* InputComponent)
@@ -250,6 +252,8 @@ void ACIS695_vehiclePawn::EnableInvehicleView(const bool bState)
 
 void ACIS695_vehiclePawn::Tick(float Delta)
 {
+	int32 KPH_int = FMath::FloorToInt(FMath::Abs(GetVehicleMovement()->GetForwardSpeed()) * 0.036f);
+	dTime = dTime + Delta;
 	// Setup the flag to say we are in reverse gear
 	bInReverseGear = GetVehicleMovement()->GetCurrentGear() < 0;
 
@@ -257,7 +261,7 @@ void ACIS695_vehiclePawn::Tick(float Delta)
 	UpdatePhysicsMaterial();
 
 	// Update the strings used in the hud (invehicle and onscreen)
-	UpdateHUDStrings();
+	UpdateHUDStrings(Delta);
 
 	// Set the string in the invehicle hud
 	SetupInvehicleHUD();
@@ -314,13 +318,24 @@ void ACIS695_vehiclePawn::OnMsg()
 	TCPNetComponent->sendMsg("120");
 }
 
-void ACIS695_vehiclePawn::UpdateHUDStrings()
+void ACIS695_vehiclePawn::UpdateHUDStrings(float dt)
 {
 	float KPH = FMath::Abs(GetVehicleMovement()->GetForwardSpeed()) * 0.036f;
 	int32 KPH_int = FMath::FloorToInt(KPH);
+	dTime += dt;
+	static int previousSpeed;
 
 	// Using FText because this is display text that should be localizable
 	SpeedDisplayString = FText::Format(LOCTEXT("SpeedFormat", "{0} km/h"), FText::AsNumber(KPH_int));
+	
+	//FCSZ sendMsg
+	if (previousSpeed != KPH_int) {
+		previousSpeed = KPH_int;
+		if (dTime > 0.05) {
+			TCPNetComponent->sendMsg(FString::FromInt(KPH_int));
+			dTime = 0;
+		}
+	}
 
 	if (bInReverseGear == true)
 	{

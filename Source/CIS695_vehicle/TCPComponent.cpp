@@ -13,7 +13,7 @@ UTCPComponent::UTCPComponent()
 	// off to improve performance if you don't need them.
 	bWantsBeginPlay = true;
 	PrimaryComponentTick.bCanEverTick = true;
-
+	
 	address = TEXT("192.168.1.81");
 	port = 3492;
 	SocketAsClient = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->CreateSocket(NAME_Stream, TEXT("default"), false);
@@ -72,7 +72,7 @@ int32 UTCPComponent::sendMsg(const FString str)
 		int32 sent = 0;
 		bool successful = SocketAsClient->Send((uint8*)TCHAR_TO_UTF8(serializedChar), size, sent);
 		if (successful) {
-			debugMsg("message sent");
+			debugMsg(str);
 		}
 		else {
 			debugMsg("message not sent");

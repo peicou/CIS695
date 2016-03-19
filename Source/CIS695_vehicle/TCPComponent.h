@@ -20,6 +20,7 @@ public:
 	FString address;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "TCP Connection")
 	int32 port;
+
 	// Sets default values for this component's properties
 	UTCPComponent();
 
