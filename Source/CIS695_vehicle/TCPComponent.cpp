@@ -99,14 +99,6 @@ void UTCPComponent::endConnection()
 	}
 }
 
-//Rama's String From Binary Array
-FString UTCPComponent::StringFromBinaryArray(const TArray<uint8>& BinaryArray)
-{
-	//Create a string from a byte array!
-	std::string cstr(reinterpret_cast<const char*>(BinaryArray.GetData()), BinaryArray.Num());
-	return FString(cstr.c_str());
-}
-
 void UTCPComponent::debugMsg(const FString str)
 {
 	if (GEngine)
